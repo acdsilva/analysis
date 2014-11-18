@@ -1,5 +1,8 @@
-########## Para identificar a pasta da biblioteca (antonio olnly) 
+########## Para identificar a pasta da biblioteca (antonio olnly) ##########
 read.delim(file = '~/R/Doc/abu.txt',sep = "", dec = ".", header = TRUE)
+
+########## Para carregar a base  ##########
+abu <- read.delim(file = 'abu.txt',sep = "", dec = ".", header = TRUE)
 
 # Criando data frame com as medidas de abundância
 medidas.abundancia <- data.frame(prop.Pseudoscorpionida = 
@@ -32,6 +35,7 @@ medidas.abundancia <- data.frame(prop.Pseudoscorpionida =
                                  prop.Scorpiones=abu$Scorpiones/sum(abu$Scorpiones),
                                  prop.Scutigeromorpha=abu$Stemmiulida/sum(abu$Stemmiulida),
                                  prop.Scolopendromorph=abu$Scolopendromorpha/sum(abu$Scolopendromorpha))
+
 
 sum(abu$Pseudoscorpionida)
 hist(medidas.abundancia$prop.Pseudoscorpionida)

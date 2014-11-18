@@ -1,3 +1,4 @@
+#### General ignored files & folders ####
 # History files
 .Rhistory
 
@@ -9,3 +10,12 @@
 
 # RStudio files
 .Rproj.user/
+.Rproj.user
+
+
+
+#### Fernando ignored files & folders ####
+Analysis.Rproj
+
+
+#### Antonio ignored files & folders ####
