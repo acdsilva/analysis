@@ -2,6 +2,13 @@
 
 In this NEWS document are all relevant changes in this repository.
 
+### Analysis 0.0.2 ###
+
+* .gitignore: adding personal files to ignored files list.
+
+* mesure_abundance.R: line deletion
+
+
 ### Analysis 0.0.1 ###
 
 * .gitignore: adding personal files to ignored files list.
