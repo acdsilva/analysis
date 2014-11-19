@@ -1,6 +1,3 @@
-########## Para identificar a pasta da biblioteca (antonio olnly) ##########
-read.delim(file = '~/R/Doc/abu.txt',sep = "", dec = ".", header = TRUE)
-
 ########## Para carregar a base  ##########
 abu <- read.delim(file = 'abu.txt',sep = "", dec = ".", header = TRUE)
 
