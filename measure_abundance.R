@@ -70,8 +70,12 @@ J <- H/log(S)
 
 #Jaccad index 
 #create the graph for input in function
+
 abu.env <- read.delim(file = 'abu_env_biomas.txt',sep = "", dec = ".", header = TRUE)
 View(abu.env)
+abu.env2<-read.delim(file = 'abu2_env_biomas.txt',sep = "", dec = ".", header = TRUE)
+View(abu.env2)
+
 #g<-pair()
 #similarity.jaccard(g, vids = V(graph), mode = c("all", "out", "in",
         #                                                   "total"), loops = FALSE)
@@ -83,11 +87,18 @@ library("lattice")
 ##load data
 data.frame(abu)
 myabu<-abu
+## dealing with dissimilarity 
+abu.dis <- vegdist(abu)
+abu.mds0 <- isoMDS(abu.dis)
+## Check the function
+stressplot(abu.mds0, abu.dis)
+
 
 ##load environmental data set
+
 data.frame(abu.env)
 myabu.env<-abu.env
-
+myabu2.env<-abu.env2
 ####1. Escalonamento Multidimensional Não Métrico ###
 # (non-metric multidimensional scaling,NMDS)
 # mapeamento das dessemelhanças da comunidade em uma forma não linear sobre o
@@ -95,7 +106,13 @@ myabu.env<-abu.env
 abu.mds <- metaMDS(myabu, trace = FALSE)
 abu.mds
 
-# stress, valor de 0 a 1
+
+##Get Species or Site Scores from an Ordination
+##Function to access either species or site scores for specified axes in some ordination methods.
+abu.pca <- prcomp(abu)
+scores(abu.pca, choices=c(1,2,3,4,5,6,7,8))
+
+###### stress, valor de 0 a 1
 #1. Function used Bray-Curtis dissimilarities.
 #2. Function run isoMDS with several random starts, and stopped either
 #   after a certain number of tries, or after nding two similar
@@ -112,10 +129,28 @@ abu.mds
 #6. the test use function isoMDS for NMDS - Non Metric multidimensional scaling
 plot(abu.mds, type = "t")
 
-# função "envfit", 
+#####Fits an Environmental Vector or Factor onto an Ordination#####
+###function "envfit",  
+#The function fits environmental vectors or factors onto an ordination.
+#The projections of points onto vectors have maximum correlation 
+#with corresponding environmental variables, and the factors show the averages of factor levels.
 # vai encaixa/ajustar vetores ambientais ou fatores para uma ordenação
 # resultado com:
 # "r" = Goodness of fit (Testes de adequação (aderência))
 # e "pvals" = valores de P para cada variável.
-ef <- envfit(abu.mds, myabu.env, permu = 999)
+
+ef <- envfit(abu.mds, myabu.env, permu = 999)#error in original myabu.env! 
 ef
+
+#try fix error use data of myabu2.env $ here the same number in x
+ef <- envfit(abu.mds, myabu2.env, permu = 999)
+ef
+
+# gráfico com os dados ambientais 
+windows(width=5,height=5)
+plot(abu.mds,type = "t", display = "sites")
+plot(ef, p.max = 0.05) # somente os mais significativas
+
+
+##Use the pca for ordenation and scores in substitution of abu.mds
+plot(scores, type = "n")
