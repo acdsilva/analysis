@@ -18,7 +18,8 @@ R scripts para analisar dados ecologicos.
   + ape
   + picante
   + geiger
-  
+  + permute
+  + MASS
 
 ### Contribution guidelines ###
 

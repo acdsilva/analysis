@@ -6,6 +6,7 @@ In this NEWS document are all relevant changes in this repository.
 *.gitignore: adding personal files to ignored files list.
 
 * mesure_abundance.R:  new function to Calculate Ecololgical Diversity Indices and rarefaction    species Richness
+*Calculate NMDS
 *Script.R new script for phylogenetic signal
 *RES(sc).R new script for phylogenetic signal
 * READ.md: include new Dependencies
