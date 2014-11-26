@@ -1,6 +1,14 @@
 # NEWS #
 
 In this NEWS document are all relevant changes in this repository.
+### Analysis 0.0.3 ###
+
+*.gitignore: adding personal files to ignored files list.
+
+* mesure_abundance.R:  new function to Calculate Ecololgical Diversity Indices and rarefaction species Richness
+*Script.R
+* READ.md: include new Dependencies
+
 
 ### Analysis 0.0.2 ###
 

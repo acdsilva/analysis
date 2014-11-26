@@ -34,6 +34,38 @@ medidas.abundancia <- data.frame(prop.Pseudoscorpionida =
                                  prop.Scolopendromorph=abu$Scolopendromorpha/sum(abu$Scolopendromorpha))
 
 
-sum(abu$Pseudoscorpionida)
-hist(medidas.abundancia$prop.Pseudoscorpionida)
-plot(medidas.abundancia)
+##sum(abu$Pseudoscorpionida)#
+#hist(medidas.abundancia$prop.Pseudoscorpionida) precisa ver o que ta dando pau#
+#plot(medidas.abundancia)#
+
+##Calculate Ecololgical Diversity Indices and rarefaction species Richness##
+library("vegan")
+library("EnvStats")
+library("ape")
+library("ggplot2")
+
+########## Para carregar a base  ##########
+abu <- read.delim(file = 'abu.txt',sep = "", dec = ".", header = TRUE)
+
+##diversity
+diversity(abu, index = "shannon", MARGIN = 1, base = exp(1))
+diversity(abu, index = "simpson", MARGIN = 1, base = exp(1))
+
+#simplify the diversity index
+##data(abu)## Use the current data.frame
+H <- diversity(abu)
+simp <- diversity(abu, "simpson")
+invsimp <- diversity(abu, "inv")
+## Unbiased Simpson of Hurlbert 1971 (eq. 5):
+unbias.simp <- rarefy(abu, 2) - 1
+## Fisher alpha
+alpha <- fisher.alpha(abu)
+##Plot all index
+pairs(cbind(H, simp, invsimp, unbias.simp, alpha), pch="+", col="blue")
+## Species richness (S) adaptated vegan eg.
+S <- specnumber(abu) ## rowSums(abu > 0) 
+# To calculate Pielou's evenness (J)
+J <- H/log(S)
+
+#Jaccad index 
+#create the graph for input in function
