@@ -13,6 +13,12 @@ R scripts para analisar dados ecologicos.
 
 * Dependencies
   + ggplot2
+  + vegan
+  + EnvStats
+  + ape
+  + picante
+  + geiger
+  
 
 ### Contribution guidelines ###
 
