@@ -25,7 +25,7 @@ medidas.abundancia <- data.frame(prop.Pseudoscorpionida =
                                  prop.Stemmiulida=abu$Stemmiulida/sum(abu$Stemmiulida),
                                  prop.Thysanoptera=abu$Thysanoptera/sum(abu$Thysanoptera),
                                  prop.Zygentoma=abu$Zygentoma/sum(abu$Zygentoma),
-                                 prop.Pseudoscorpionida.1=abu$Pseudoscorpionida.1/sum(abu$Pseudoscorpionida.1),
+                                 #prop.Pseudoscorpionida.1=abu$Pseudoscorpionida.1/sum(abu$Pseudoscorpionida.1),
                                  prop.Diplura=abu$Diplura/sum(abu$Diplura),
                                  prop.Diptera=abu$Diptera/sum(abu$Diptera),
                                  prop.Lepidoptera=abu$Embioptera/sum(abu$Embioptera),
@@ -67,5 +67,55 @@ S <- specnumber(abu) ## rowSums(abu > 0)
 # To calculate Pielou's evenness (J)
 J <- H/log(S)
 
+
 #Jaccad index 
 #create the graph for input in function
+abu.env <- read.delim(file = 'abu_env_biomas.txt',sep = "", dec = ".", header = TRUE)
+View(abu.env)
+#g<-pair()
+#similarity.jaccard(g, vids = V(graph), mode = c("all", "out", "in",
+        #                                                   "total"), loops = FALSE)
+##### Calculate NMDS###
+library("MASS")
+library("vegan")
+library("permute")
+library("lattice")
+##load data
+data.frame(abu)
+myabu<-abu
+
+##load environmental data set
+data.frame(abu.env)
+myabu.env<-abu.env
+
+####1. Escalonamento Multidimensional Não Métrico ###
+# (non-metric multidimensional scaling,NMDS)
+# mapeamento das dessemelhanças da comunidade em uma forma não linear sobre o
+#"espaço da ordenação" e pode lidar com respostas não-lineares das espécies
+abu.mds <- metaMDS(myabu, trace = FALSE)
+abu.mds
+
+# stress, valor de 0 a 1
+#1. Function used Bray-Curtis dissimilarities.
+#2. Function run isoMDS with several random starts, and stopped either
+#   after a certain number of tries, or after nding two similar
+#   congurations with minimum stress. In any case, it returned the
+#   best solution.
+#3. Function rotated the solution so that the largest variance of site
+#   scores will be on the first axis.
+#4. Function scaled the solution so that one unit corresponds to halving
+#   of community similarity from the replicate similarity.
+#5. Function found species scores as weighted averages of site scores,
+#   but expanded them so that species and site scores have equal variances.
+#   This expansion can be undone using shrink = TRUE in display
+#   commands.
+#6. the test use function isoMDS for NMDS - Non Metric multidimensional scaling
+plot(abu.mds, type = "t")
+
+# função "envfit", 
+# vai encaixa/ajustar vetores ambientais ou fatores para uma ordenação
+# resultado com:
+# "r" = Goodness of fit (Testes de adequação (aderência))
+# e "pvals" = valores de P para cada variável.
+ef <- envfit(abu.mds, myabu.env, permu = 999)
+ef
