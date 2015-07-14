@@ -1,0 +1,57 @@
+---
+title: "Análise de TcMax"
+author: "Antonio e Fernando"
+date: "14-07-2015"
+output: html_document
+---
+
+```{r bibliotecas, echo=FALSE, cache=TRUE, warning=FALSE, message=FALSE}
+library(ggplot2)
+library(reshape2)
+```
+
+# Intro
+Verificar quais as variáveis estão associadas com *TcMax*.
+
+# Análise
+```{r carregando, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
+dados<-read.csv("../tese.csv", header = TRUE, sep = ";", dec = ".")
+```
+
+You can also embed plots, for example:
+
+```{r ditr.bioma, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=6, fig.width=4, fig.cap=' Distribuição de tcMax'}
+ggplot(dados, aes(x = tcmax)) + geom_histogram(binwidth = 0.5) +
+  geom_histogram(colour = "white") +
+  geom_vline(x = mean(dados$tcmax), colour = 'blue') +
+  facet_wrap( ~ localidade, scale = 'free_y', ncol = 1) + theme_bw()
+```
+
+
+```{r ditr.bioma.Classe, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=10, fig.width=12, fig.cap=' Distribuição de tcMax'}
+# ggplot(dados, aes(x = tcmax)) + geom_histogram(binwidth = 0.5) +
+#   geom_histogram(colour = "white") +
+#   geom_vline(x = mean(dados$tcmax), colour = 'blue') +
+#   facet_grid(classe ~ localidade, scale = 'free') + theme_bw()
+```
+
+```{r ditr.Classe.bioma, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=10, fig.width=12, fig.cap= ' Distribuição de tcMax'}
+ggplot(dados, aes(x = tcmax)) + geom_histogram(binwidth = 0.5) +
+  geom_histogram(colour = "white") +
+  geom_vline(x = mean(dados$tcmax), colour = 'blue') +
+  facet_grid(localidade ~ classe, scale = 'free') + theme_bw()
+```
+
+```{r ditr.temSol.bioma, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=10, fig.width=12, fig.cap= ' Distribuição de TempSol'}
+ggplot(dados, aes(x = tempSOL)) + geom_histogram(binwidth = 0.5) +
+  geom_histogram(colour = "white") +
+  geom_vline(x = mean(dados$tempSOL), colour = 'blue') +
+  facet_grid(localidade ~ classe, scale = 'free') + theme_bw()
+```
+
+```{r ditr.alt.bioma, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=10, fig.width=12, fig.cap= ' Distribuição de Altitude'}
+ggplot(dados, aes(x = alt)) + geom_histogram(binwidth = 0.5) +
+  geom_histogram(colour = "white") +
+  geom_vline(x = mean(dados$alt), colour = 'blue') +
+  facet_grid(localidade ~ classe, scale = 'free') + theme_bw()
+```
