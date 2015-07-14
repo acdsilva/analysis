@@ -55,3 +55,29 @@ ggplot(dados, aes(x = alt)) + geom_histogram(binwidth = 0.5) +
   geom_vline(x = mean(dados$alt), colour = 'blue') +
   facet_grid(localidade ~ classe, scale = 'free') + theme_bw()
 ```
+
+Fizemos uma regressão simples para verificar a relação entre o **tcmax** com as variáveis **tempSOL** e **alt**.
+
+```{r lm.tcMax, cache=TRUE, echo=TRUE}
+fit.tcMax1 <- lm(dados$tcmax ~ dados$tempSOL)
+summary(fit.tcMax1)
+
+fit.tcMax2 <- lm(dados$tcmax ~ dados$tempSOL + dados$alt)
+summary(fit.tcMax2)
+```
+
+```{r plot.lm1, cache=TRUE, echo=FALSE}
+# plot do primeiro modelo
+plot(dados$tempSOL,dados$tcmax)
+abline(fit.tcMax1)
+```
+
+A regessão não ajustou bem, pois um grupo apresentou temperaturas de **tcmax** acima de 50 **tempSOL**, mas os seu **tcmax** ficou abaixo do esperado.
+
+```{r destoantes, cache=TRUE, echo=FALSE}
+segundo.grupo <- dados[which(dados$tempSOL > 50), ]
+summary(segundo.grupo[,c('tcmax', 'classe','localidade','long','estacao','tempSOL')])
+```
+
+
+
