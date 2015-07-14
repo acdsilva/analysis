@@ -10,9 +10,14 @@
 .Rproj.user
 #### Fernando ignored files & folders ####
 Analysis.Rproj
+Report.html
+Report_cache/
+Report_files/
 <<<<<<< HEAD
 =======
 abu.txt
+
+
 
 
 >>>>>>> 13ea59113a5d186aab6b1c7a4e20feb3f46adaec
