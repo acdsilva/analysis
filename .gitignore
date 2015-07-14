@@ -10,10 +10,22 @@
 .Rproj.user
 #### Fernando ignored files & folders ####
 Analysis.Rproj
+<<<<<<< HEAD
+=======
+abu.txt
+
+
+>>>>>>> 13ea59113a5d186aab6b1c7a4e20feb3f46adaec
 #### Antonio ignored files & folders ####
 abu.txt
+<<<<<<< HEAD
+=======
 DIVA_spp.txt
 abu_env_biomas.txt
 abu2_env_biomas.txt
+<<<<<<< HEAD
 abu_jac.txt
 abu2.txt
+=======
+>>>>>>> c74a97a0538a94a453004470d904d9560d6e791d
+>>>>>>> 13ea59113a5d186aab6b1c7a4e20feb3f46adaec
