@@ -1,25 +1,19 @@
 #### General ignored files & folders ####
 # History files
 .Rhistory
-
 # Example code in package build process
 *-Ex.R
-
 # R data files from past sessions
 .Rdata
-
 # RStudio files
 .Rproj.user/
 .Rproj.user
-
-
-
 #### Fernando ignored files & folders ####
 Analysis.Rproj
-
-
 #### Antonio ignored files & folders ####
 abu.txt
 DIVA_spp.txt
 abu_env_biomas.txt
 abu2_env_biomas.txt
+abu_jac.txt
+abu2.txt

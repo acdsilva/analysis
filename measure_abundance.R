@@ -1,6 +1,5 @@
 ########## Para carregar a base  ##########
 abu <- read.delim(file = 'abu.txt',sep = "", dec = ".", header = TRUE)
-
 # Criando data frame com as medidas de abundância
 medidas.abundancia <- data.frame(prop.Pseudoscorpionida = 
                                    abu[,'Pseudoscorpionida']/sum(abu[,'Pseudoscorpionida']),
@@ -48,22 +47,22 @@ library("ggplot2")
 abu <- read.delim(file = 'abu.txt',sep = "", dec = ".", header = TRUE)
 
 ##diversity
-diversity(abu, index = "shannon", MARGIN = 1, base = exp(1))
-diversity(abu, index = "simpson", MARGIN = 1, base = exp(1))
+diversity(abu3, index = "shannon", MARGIN = 1, base = exp(1))
+diversity(abu3, index = "simpson", MARGIN = 1, base = exp(1))
 
 #simplify the diversity index
 ##data(abu)## Use the current data.frame
-H <- diversity(abu)
-simp <- diversity(abu, "simpson")
-invsimp <- diversity(abu, "inv")
+H <- diversity(abu3)
+simp <- diversity(abu3, "simpson")
+invsimp <- diversity(abu3, "inv")
 ## Unbiased Simpson of Hurlbert 1971 (eq. 5):
-unbias.simp <- rarefy(abu, 2) - 1
+unbias.simp <- rarefy(abu3, 2) - 1
 ## Fisher alpha
-alpha <- fisher.alpha(abu)
+alpha <- fisher.alpha(abu3)
 ##Plot all index
 pairs(cbind(H, simp, invsimp, unbias.simp, alpha), pch="+", col="blue")
 ## Species richness (S) adaptated vegan eg.
-S <- specnumber(abu) ## rowSums(abu > 0) 
+S <- specnumber(abu3) ## rowSums(abu > 0) 
 # To calculate Pielou's evenness (J)
 J <- H/log(S)
 
@@ -115,7 +114,7 @@ scores(abu.pca, choices=c(1,2,3,4,5,6,7,8))
 ###### stress, valor de 0 a 1
 #1. Function used Bray-Curtis dissimilarities.
 #2. Function run isoMDS with several random starts, and stopped either
-#   after a certain number of tries, or after nding two similar
+#   after a certain number of tries, or after nding two similar
 #   congurations with minimum stress. In any case, it returned the
 #   best solution.
 #3. Function rotated the solution so that the largest variance of site
@@ -128,6 +127,8 @@ scores(abu.pca, choices=c(1,2,3,4,5,6,7,8))
 #   commands.
 #6. the test use function isoMDS for NMDS - Non Metric multidimensional scaling
 plot(abu.mds, type = "t")
+
+plot(abu$Acari)
 
 #####Fits an Environmental Vector or Factor onto an Ordination#####
 ###function "envfit",  
@@ -142,7 +143,7 @@ plot(abu.mds, type = "t")
 ef <- envfit(abu.mds, myabu.env, permu = 999)#error in original myabu.env! 
 ef
 
-#try fix error use data of myabu2.env $ here the same number in x
+#try fix error use data of myabu2.env  here the same number in x
 ef <- envfit(abu.mds, myabu2.env, permu = 999)
 ef
 
@@ -151,6 +152,14 @@ windows(width=5,height=5)
 plot(abu.mds,type = "t", display = "sites")
 plot(ef, p.max = 0.05) # somente os mais significativas
 
+##SIMPER
+(sim <- with(abu.env, simper(abu)))
+summary(sim)
+
 
 ##Use the pca for ordenation and scores in substitution of abu.mds
 plot(scores, type = "n")
+
+library(Matrix)
+
+
