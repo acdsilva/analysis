@@ -21,3 +21,9 @@ abu.txt
 
 #### Antonio ignored files & folders ####
 abu.txt
+<<<<<<< HEAD
+=======
+DIVA_spp.txt
+abu_env_biomas.txt
+abu2_env_biomas.txt
+>>>>>>> c74a97a0538a94a453004470d904d9560d6e791d
