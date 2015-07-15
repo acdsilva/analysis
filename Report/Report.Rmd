@@ -29,10 +29,10 @@ ggplot(dados, aes(x = tcmax)) + geom_histogram(binwidth = 0.5) +
 
 
 ```{r ditr.bioma.Classe, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=10, fig.width=12, fig.cap=' Distribuição de tcMax'}
-# ggplot(dados, aes(x = tcmax)) + geom_histogram(binwidth = 0.5) +
-#   geom_histogram(colour = "white") +
-#   geom_vline(x = mean(dados$tcmax), colour = 'blue') +
-#   facet_grid(classe ~ localidade, scale = 'free') + theme_bw()
+ggplot(dados, aes(x = tcmax)) + geom_histogram(binwidth = 0.5) +
+  geom_histogram(colour = "white") +
+  geom_vline(x = mean(dados$tcmax), colour = 'blue') +
+  facet_grid(classe ~ localidade, scale = 'free') + theme_bw()
 ```
 
 ```{r ditr.Classe.bioma, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=10, fig.width=12, fig.cap= ' Distribuição de tcMax'}
@@ -66,18 +66,64 @@ fit.tcMax2 <- lm(dados$tcmax ~ dados$tempSOL + dados$alt)
 summary(fit.tcMax2)
 ```
 
+A predição do **tcmax** apenas com o **tempSOL** não ficou ruim (análise de resíduos ficou relativamente boa, com um problemas que serão mencionado a seguir), incluindo o **alt** melhorou um pouco mais. O gráfico abaixo mostra a regressão apenas com o preditor **tempSOL**.
+
 ```{r plot.lm1, cache=TRUE, echo=FALSE}
 # plot do primeiro modelo
 plot(dados$tempSOL,dados$tcmax)
 abline(fit.tcMax1)
 ```
 
-A regessão não ajustou bem, pois um grupo apresentou temperaturas de **tcmax** acima de 50 **tempSOL**, mas os seu **tcmax** ficou abaixo do esperado.
+Nota-se que a regessão não ajustou tão bem por conta de um grupo que apresentou temperaturas de **tempSOL** acima de 50 que o **tcmax** desses pontos são muito abaixo do esperado. Este grupo de animais possue as características abaixo.
 
-```{r destoantes, cache=TRUE, echo=FALSE}
+```{r destoantes, cache=TRUE, echo=TRUE}
 segundo.grupo <- dados[which(dados$tempSOL > 50), ]
-summary(segundo.grupo[,c('tcmax', 'classe','localidade','long','estacao','tempSOL')])
+summary(segundo.grupo[,c('tcmax', 'classe','localidade', 'ponto', 'long','estacao','tempSOL')])
+```
+
+## Análise de regressão considerando os biomas
+
+```{r etl.analysis, cache=TRUE,echo=FALSE}
+regr.data <- dados[,c("id", "bioma", "localidade","ponto", "tcmax","classe","tempSOL","long", "alt")]
+regr.data[,'Bioma'] <- 'Amazonia'
+regr.data[which(regr.data$localidade == 'Caatinga'),'Bioma'] <- 'Caatinga'
+regr.data[which(regr.data$localidade == 'Cerrado'),'Bioma'] <- 'Cerrado'
+regr.data[which(regr.data$localidade %in% c('MAAltitude','MataAtlantica')),'Bioma'] <- 'Mata Atlântica'
+
+regr.data[,'Bioma1'] <- 'Demais'
+regr.data[which(regr.data$localidade == 'Caatinga'),'Bioma1'] <- 'Caatinga'
+```
+
+```{r lm.tcMax, cache=TRUE, echo=TRUE}
+fit.tcMax <- lm(regr.data$tcmax ~ regr.data$tempSOL + regr.data$Bioma)
+fit.tcMax1 <- lm(regr.data$tcmax ~ regr.data$tempSOL + regr.data$Bioma1) # piora
+fit.tcMax2 <- lm(regr.data$tcmax ~ regr.data$tempSOL + regr.data$classe) # piora
+fit.tcMax3 <- lm(regr.data$tcmax ~ regr.data$tempSOL + regr.data$localidade) # piora
+summary(fit.tcMax)
+summary(fit.tcMax1)
+summary(fit.tcMax2)
+summary(fit.tcMax3)
+```
+
+```{r}
+ggplot(regr.data, aes(x = tempSOL, y = tcmax)) + geom_point() +
+  facet_wrap( ~ localidade)
 ```
 
 
+
+Analisando os pontos que caem muito fora da curva de regressão, nota-se que são da caatinga e em determinados pontos de coleta, onde há uma especie de folhagem seca, de onde os bixos foram coletados (pontos 1 e 3 do bioma Caatinga). Analisando os dados são `r length(which(regr.data$Folhagem == 'Sim'))` animais coletados nesses sítios.
+
+A idéia é serapar com uma variável dummy os grupos que estão nesse tipo de vegetação específica e refazer as regressões, aliás, inicalmente usaremos apenas o **tempSOL** como preditor do **tcmax**.
+
+fit.tcMax3 <- lm(regr.data$tcmax[which(regr.data$Folhagem == 'Não')] ~ regr.data$tempSOL[which(regr.data$Folhagem == 'Não')])
+summary(fit.tcMax3)
+
+plot(regr.data$tempSOL[which(regr.data$Folhagem == 'Não')], regr.data$tcmax[which(regr.data$Folhagem == 'Não')])
+abline(fit.tcMax3)
+
+
+regr.data <- cbind.data.frame(dados[,c("id", "bioma", "ponto", "tcmax","classe","tempSOL","long")],
+                              Folhagem = 'Não', stringsAsFactors = F)
+regr.data <- regr.data[which(regr.data$tempSOL > 14  & regr.data$tempSOL < 40),]
 
