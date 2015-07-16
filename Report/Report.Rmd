@@ -2,128 +2,91 @@
 title: "Análise de TcMax"
 author: "Antonio e Fernando"
 date: "14-07-2015"
-output: html_document
+output:
+  html_document:
+    theme: cosmo
+    toc: yes
 ---
 
 ```{r bibliotecas, echo=FALSE, cache=TRUE, warning=FALSE, message=FALSE}
-library(ggplot2)
 library(reshape2)
+library(ggplot2)
+library(lme4)
 ```
 
-# Intro
+# Análise do banco de dados
 Verificar quais as variáveis estão associadas com *TcMax*.
 
-# Análise
 ```{r carregando, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
-dados<-read.csv("../tese.csv", header = TRUE, sep = ";", dec = ".")
+dados <- read.csv("../tese.csv", header = TRUE, sep = ";", dec = ".")
+levels(dados$localidade) <- c("Amazonia", "Caatinga", "Cerrado", "Mata Atlântica de Altitude", "Mata Atlântica")
+estacoes <- read.csv("../temp_WS.csv", header = TRUE, sep = ";", dec = ".")[, -c(12, 13, 14)]
+estacoes[, 'Bioma'] <- 'Não Definido'
+estacoes[which(estacoes$WSlocality == 'Manaus'), 'Bioma'] <- 'Amazônia'
+estacoes[which(estacoes$WSlocality == 'CamposdoJordao'), 'Bioma'] <- 'Mata Atântica de Altitude'
+estacoes[which(estacoes$WSlocality == 'Guarulhos'), 'Bioma'] <- 'Mata Atântica'
+estacoes[which(estacoes$WSlocality == 'S\xe3o Carlos'), 'Bioma'] <- 'Cerrado'
+estacoes[which(estacoes$WSlocality == 'Florania'), 'Bioma'] <- 'Caatinga'
+
+estacoes.Data <- aggregate(temperature ~ Bioma, data = estacoes, mean)
+estacoes.Data <- data.frame(Bioma = estacoes.Data$Bioma,
+                            Média = estacoes.Data$temperature,
+                            Max = aggregate(temperature ~ Bioma, data = estacoes, max)[,2],
+                            Min = aggregate(temperature ~ Bioma, data = estacoes, min)[,2])
+estacoes.Data[, 'Amplitude'] <- estacoes.Data$Max - estacoes.Data$Min
+
 ```
 
-You can also embed plots, for example:
+## Análise descritiva
+
+Abaixo estão os histogramas que apresentam a distribuição dos *tcmax* por bioma.
 
 ```{r ditr.bioma, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=6, fig.width=4, fig.cap=' Distribuição de tcMax'}
 ggplot(dados, aes(x = tcmax)) + geom_histogram(binwidth = 0.5) +
   geom_histogram(colour = "white") +
-  geom_vline(x = mean(dados$tcmax), colour = 'blue') +
+  #geom_vline(x = mean(dados$tcmax), colour = 'blue') +
   facet_wrap( ~ localidade, scale = 'free_y', ncol = 1) + theme_bw()
 ```
 
-
-```{r ditr.bioma.Classe, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=10, fig.width=12, fig.cap=' Distribuição de tcMax'}
-ggplot(dados, aes(x = tcmax)) + geom_histogram(binwidth = 0.5) +
-  geom_histogram(colour = "white") +
-  geom_vline(x = mean(dados$tcmax), colour = 'blue') +
-  facet_grid(classe ~ localidade, scale = 'free') + theme_bw()
-```
+Como a distribuição possui diferentes animais, estudamos a distruibuição dos *tcmax* por classe em diferentes biomas e verificamos que numa mesma classe a distribuição dos *tcmax* se ajustam aos biomas, como visto nas distribuições a seguir.
 
 ```{r ditr.Classe.bioma, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=10, fig.width=12, fig.cap= ' Distribuição de tcMax'}
 ggplot(dados, aes(x = tcmax)) + geom_histogram(binwidth = 0.5) +
   geom_histogram(colour = "white") +
-  geom_vline(x = mean(dados$tcmax), colour = 'blue') +
-  facet_grid(localidade ~ classe, scale = 'free') + theme_bw()
+  xlab("Temperatura crítica máxima") + ylab("Número de indivíduos") +
+#   geom_vline(x = mean(dados$tcmax), colour = 'blue') +
+  facet_grid(localidade ~ classe, scale = 'free_y') + theme_bw() +
+  theme(axis.text=element_text(face='plain'),
+        axis.title=element_text(face="bold"),
+        strip.text=element_text(size = 9, face="bold"))  
 ```
+
+Das variáveis que descrevem os biomas, a *tempSOL* foi a que teve a melhor associação com a *tcmax*. A distribuição da *tempSOL* por classe em diferentes biomas está a seguir. 
 
 ```{r ditr.temSol.bioma, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=10, fig.width=12, fig.cap= ' Distribuição de TempSol'}
 ggplot(dados, aes(x = tempSOL)) + geom_histogram(binwidth = 0.5) +
   geom_histogram(colour = "white") +
-  geom_vline(x = mean(dados$tempSOL), colour = 'blue') +
-  facet_grid(localidade ~ classe, scale = 'free') + theme_bw()
+  xlab("Temperatura do solo (x cm de profundidade)") + ylab("Número de pontos de amostragem") +
+#   geom_vline(x = mean(dados$tempSOL), colour = 'blue') +
+  facet_grid(localidade ~ classe, scale = 'free') + theme_bw() +
+  theme(axis.text=element_text(face='plain'),
+        axis.title=element_text(face="bold"),
+        strip.text=element_text(size = 9, face="bold"))  
+
 ```
 
-```{r ditr.alt.bioma, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=10, fig.width=12, fig.cap= ' Distribuição de Altitude'}
-ggplot(dados, aes(x = alt)) + geom_histogram(binwidth = 0.5) +
-  geom_histogram(colour = "white") +
-  geom_vline(x = mean(dados$alt), colour = 'blue') +
-  facet_grid(localidade ~ classe, scale = 'free') + theme_bw()
+## Modelo regressão (efeito misto) considerando os biomas
+
+O primeiro modelo considerado é o modelo de efeitos mistos onde a 
+
+```{r mixed.effect.Model, cache=TRUE, echo=FALSE}
+# assume an intercept and slope that are different for each subject and they are
+# correlated
+#restricted maximum likelihood estimation REML
+fit.mixed.2effects <- lmer(tcmax ~ 1 + tempSOL + (1 + tempSOL | localidade), data = dados, REML = F)
 ```
 
-Fizemos uma regressão simples para verificar a relação entre o **tcmax** com as variáveis **tempSOL** e **alt**.
-
-```{r lm.tcMax, cache=TRUE, echo=TRUE}
-fit.tcMax1 <- lm(dados$tcmax ~ dados$tempSOL)
-summary(fit.tcMax1)
-
-fit.tcMax2 <- lm(dados$tcmax ~ dados$tempSOL + dados$alt)
-summary(fit.tcMax2)
+```{r mixed.effect.Summary, cache=TRUE, echo=TRUE}
+summary(fit.mixed.2effects)
 ```
-
-A predição do **tcmax** apenas com o **tempSOL** não ficou ruim (análise de resíduos ficou relativamente boa, com um problemas que serão mencionado a seguir), incluindo o **alt** melhorou um pouco mais. O gráfico abaixo mostra a regressão apenas com o preditor **tempSOL**.
-
-```{r plot.lm1, cache=TRUE, echo=FALSE}
-# plot do primeiro modelo
-plot(dados$tempSOL,dados$tcmax)
-abline(fit.tcMax1)
-```
-
-Nota-se que a regessão não ajustou tão bem por conta de um grupo que apresentou temperaturas de **tempSOL** acima de 50 que o **tcmax** desses pontos são muito abaixo do esperado. Este grupo de animais possue as características abaixo.
-
-```{r destoantes, cache=TRUE, echo=TRUE}
-segundo.grupo <- dados[which(dados$tempSOL > 50), ]
-summary(segundo.grupo[,c('tcmax', 'classe','localidade', 'ponto', 'long','estacao','tempSOL')])
-```
-
-## Análise de regressão considerando os biomas
-
-```{r etl.analysis, cache=TRUE,echo=FALSE}
-regr.data <- dados[,c("id", "bioma", "localidade","ponto", "tcmax","classe","tempSOL","long", "alt")]
-regr.data[,'Bioma'] <- 'Amazonia'
-regr.data[which(regr.data$localidade == 'Caatinga'),'Bioma'] <- 'Caatinga'
-regr.data[which(regr.data$localidade == 'Cerrado'),'Bioma'] <- 'Cerrado'
-regr.data[which(regr.data$localidade %in% c('MAAltitude','MataAtlantica')),'Bioma'] <- 'Mata Atlântica'
-
-regr.data[,'Bioma1'] <- 'Demais'
-regr.data[which(regr.data$localidade == 'Caatinga'),'Bioma1'] <- 'Caatinga'
-```
-
-```{r lm.tcMax, cache=TRUE, echo=TRUE}
-fit.tcMax <- lm(regr.data$tcmax ~ regr.data$tempSOL + regr.data$Bioma)
-fit.tcMax1 <- lm(regr.data$tcmax ~ regr.data$tempSOL + regr.data$Bioma1) # piora
-fit.tcMax2 <- lm(regr.data$tcmax ~ regr.data$tempSOL + regr.data$classe) # piora
-fit.tcMax3 <- lm(regr.data$tcmax ~ regr.data$tempSOL + regr.data$localidade) # piora
-summary(fit.tcMax)
-summary(fit.tcMax1)
-summary(fit.tcMax2)
-summary(fit.tcMax3)
-```
-
-```{r}
-ggplot(regr.data, aes(x = tempSOL, y = tcmax)) + geom_point() +
-  facet_wrap( ~ localidade)
-```
-
-
-
-Analisando os pontos que caem muito fora da curva de regressão, nota-se que são da caatinga e em determinados pontos de coleta, onde há uma especie de folhagem seca, de onde os bixos foram coletados (pontos 1 e 3 do bioma Caatinga). Analisando os dados são `r length(which(regr.data$Folhagem == 'Sim'))` animais coletados nesses sítios.
-
-A idéia é serapar com uma variável dummy os grupos que estão nesse tipo de vegetação específica e refazer as regressões, aliás, inicalmente usaremos apenas o **tempSOL** como preditor do **tcmax**.
-
-fit.tcMax3 <- lm(regr.data$tcmax[which(regr.data$Folhagem == 'Não')] ~ regr.data$tempSOL[which(regr.data$Folhagem == 'Não')])
-summary(fit.tcMax3)
-
-plot(regr.data$tempSOL[which(regr.data$Folhagem == 'Não')], regr.data$tcmax[which(regr.data$Folhagem == 'Não')])
-abline(fit.tcMax3)
-
-
-regr.data <- cbind.data.frame(dados[,c("id", "bioma", "ponto", "tcmax","classe","tempSOL","long")],
-                              Folhagem = 'Não', stringsAsFactors = F)
-regr.data <- regr.data[which(regr.data$tempSOL > 14  & regr.data$tempSOL < 40),]
 
