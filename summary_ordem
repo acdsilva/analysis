@@ -1,0 +1,104 @@
+Models:
+m4: bodysize ~ (1 | localidade)
+m3: bodysize ~ meanCT + (1 | localidade)
+   Df    AIC    BIC  logLik deviance  Chisq Chi Df Pr(>Chisq)  
+m4  3 2284.0 2295.8 -1139.0   2278.0                           
+m3  4 2280.6 2296.3 -1136.3   2272.6 5.3887      1    0.02027 *
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+> summary(m3)
+Linear mixed model fit by REML ['lmerMod']
+Formula: bodysize ~ meanCT + (1 | localidade)
+   Data: ctmatrix
+
+REML criterion at convergence: 2275.8
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-1.1365 -0.4355 -0.1961  0.0082  6.5342 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ localidade (Intercept)  1.451   1.204   
+ Residual               26.377   5.136   
+Number of obs: 371, groups:  localidade, 5
+
+Fixed effects:
+            Estimate Std. Error t value
+(Intercept) -2.53204    2.53259  -1.000
+meanCT       0.13267    0.05776   2.297
+
+Correlation of Fixed Effects:
+       (Intr)
+meanCT -0.971
+
+########################################
+Data: ctmatrix
+Models:
+m4: bodysize ~ (1 | localidade)
+m3: tcmax ~ bodysize:ordem + (1 | localidade)
+   Df   AIC     BIC  logLik deviance Chisq Chi Df Pr(>Chisq)
+m4  3  8188  8204.5 -4091.0     8182                        
+m3 33 10890 11071.7 -5411.8    10824     0     30          1
+> m4=lmer(tcmax~(1|localidade),data=ctmatrix)
+> anova(m3,m4)
+refitting model(s) with ML (instead of REML)
+Data: ctmatrix
+Models:
+m4: tcmax ~ (1 | localidade)
+m3: tcmax ~ bodysize:ordem + (1 | localidade)
+   Df   AIC   BIC  logLik deviance  Chisq Chi Df Pr(>Chisq)    
+m4  3 11087 11104 -5540.5    11081                             
+m3 33 10890 11072 -5411.8    10824 257.38     30  < 2.2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+> summary(m3)
+Linear mixed model fit by REML ['lmerMod']
+Formula: tcmax ~ bodysize:ordem + (1 | localidade)
+   Data: ctmatrix
+
+REML criterion at convergence: 10772.4
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.3608 -0.6633 -0.0201  0.6178  4.1894 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ localidade (Intercept) 25.69    5.069   
+ Residual               21.35    4.621   
+Number of obs: 1835, groups:  localidade, 5
+
+Fixed effects:
+                                 Estimate Std. Error t value
+(Intercept)                      42.13090    2.27248  18.540
+bodysize:ordem Pseudoscorpionida -1.19188    0.79258  -1.504
+bodysize:ordemAcari               0.82345    0.82434   0.999
+bodysize:ordemAraneae             0.82762    0.12630   6.553
+bodysize:ordemBlattodea           0.33565    0.17544   1.913
+bodysize:ordemColeoptera          0.17797    0.21276   0.836
+bodysize:ordemCollembola         -2.45602    1.03003  -2.384
+bodysize:ordemDermaptera          1.70094    0.81575   2.085
+bodysize:ordemDiplura             1.97456    4.62775   0.427
+bodysize:ordemDiptera             1.64456    2.67963   0.614
+bodysize:ordemEmbioptera          3.84237    4.62984   0.830
+bodysize:ordemGeophilomorpha     -0.86839    0.31205  -2.783
+bodysize:ordemHemiptera          -0.07278    0.15744  -0.462
+bodysize:ordemHymenoptera         0.40749    0.11219   3.632
+bodysize:ordemIsopoda            -1.23140    0.18874  -6.524
+bodysize:ordemIsoptera           -1.16153    0.50812  -2.286
+bodysize:ordemIxodida             2.00903    2.68325   0.749
+bodysize:ordemLepidoptera         9.14456    4.62775   1.976
+bodysize:ordemNeuroptera          7.34237    4.62984   1.586
+bodysize:ordemOpiliones          -1.42649    0.76161  -1.873
+bodysize:ordemOrthoptera          0.08725    0.56975   0.153
+bodysize:ordemPhasmatodea         1.34237    3.28005   0.409
+bodysize:ordemPolydesmida        -0.82051    0.49049  -1.673
+bodysize:ordemScolopendromorpha  -8.25026    1.76291  -4.680
+bodysize:ordemScorpiones          3.96402    4.62718   0.857
+bodysize:ordemScutigeromorpha    -2.53598    4.62718  -0.548
+bodysize:ordemSpirobolida        -0.01045    0.06223  -0.168
+bodysize:ordemStemmiulida        -7.40763    3.28005  -2.258
+bodysize:ordemThysanoptera       -2.90763    3.28005  -0.886
+bodysize:ordemThysanoptera       -6.81758    2.68577  -2.538
+bodysize:ordemZygentoma           1.49432    0.16859   8.864
