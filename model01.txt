@@ -1,0 +1,259 @@
+###############################################################################
+# R scripts to run Generalized Dissimilarity Models and log-liner
+# models on vegetation data from southwest Australia and northern Europe 
+# 
+# written by MC Fitzpatrick at UMCES-Appalachian Lab, Frostburg, MD 2012-2013
+#
+# Results described in:
+# Fitzpatrick et al. (in press) Environmental and historical imprints on beta-
+# diversity: insights from variation in rates of species turnover along gradients.
+# Proceedings of the Royal Society B.
+#
+# DESCRIPTION & NOTES
+# All data required to perform the analyses are provided. Note that the species
+# and environmental data tables will need to be manipulated to extract data
+# for each dispersal mode. Modeling scripts will then need to be run for each 
+# dispersal mode / region individually.
+#
+# Code is provided as is, without support 
+################################################################################
+
+
+################################################################################
+# CHUNK 1: Make presence-absence data from species list. Only need to run this
+# script on the SWWA data, EU data are in proper format for GDM. Each dispersal
+# mode will need to be extracted from the main EU data table however.
+################################################################################
+dat <- read.csv("SWWA.env.spp.dat.csv")
+
+# select by dispersal mode (or skip to run all species)
+dat <- dat[which(dat$dispersal=="vert"),] # edit as needed for each dispersal mode
+
+sitelist <- unique(dat$cellNums) # make list of unique site codes
+nsite = length(sitelist) # count number of unique sites
+spplist = sort(unique(dat$species)) # find unique spp names
+nspp = length(spplist) # count number of spp
+
+#make matrix to hold p/a data
+pa = matrix(0, nsite, nspp)
+
+# loop through data to match spp to sites, 1 if present, 0 if absent
+for (i in 1:nspp){ 
+  spp <- paste("^", spplist[i], "$", sep = "") # find exact match to spp name
+  pressite = dat$cellNums[grep(spp, dat$species)] # sites with that spp
+  #find rows with that site
+  m = match(pressite, sitelist)
+  #assign 1 to sites with that spp
+  for (j in 1:length(m)){
+    pa[m[j],i] = pa[m[j],i] + 1
+    cat(i/nspp*100, "%", fill=TRUE)
+  }
+}
+colnames(pa) <- spplist
+pa <- ifelse(pa==0,0,1)
+# write to file, edit indices as needed
+write.csv(cbind(unique(dat[,4:ncol(dat)]), pa), "...", row.names=F)
+################################################################################
+
+################################################################################
+# CHUNK 2: Variable selection routine
+# follows Ferrier et al. (2007) Div. & Dist.
+################################################################################
+source("gdmfuncs.1.1.R") # downloaded from www.biomaps.net.au/gdm 
+
+gdmDat <- read.csv("...") # env and species data table (e.g. from in CHUNK 1)
+
+# extract env and species data (edit indices as needed)
+env <- gdmDat[,1:12]
+spp <- gdmDat[,13:ncol(gdmDat)]
+
+#################
+# remove sites with fewer than 5 species (to reduce influence of poor 
+# sampling when using presence-only data)
+# Used in SWWA datasets only
+rich=5
+spp.clean <- spp[rowSums(spp)>=rich,]
+env <- env[rowSums(spp)>=rich,]
+spp <- spp.clean[,colSums(spp.clean)>0]
+#################
+
+geo=T
+if(geo){envMod <- env} else{envMod <- env[,-c(1,2)]}
+
+# loop to select significant predictors
+pval=1  
+nperm = 999 #number of permutations to run (slow!)
+wtype="standard"
+
+# loop to fit & permute models w/ w/o variables
+while(pval>0.05){
+  cat("Modeling using full env dataset...", fill=T)
+  flush.console()
+  GDM1 <- gdm.fit(envMod, spp, geo=geo, wtype=wtype)
+  coeff <- GDM1$coefficients
+  s1 <- seq(1,length(coeff),3)
+  s2 <- seq(0,length(coeff),3)
+  sumCoeffs <- NULL
+  for(k in 1:length(s1)){
+    sumCoeffs[k] <- sum(coeff[s1[k]:s2[k+1]])
+  }
+  varRem <- which(sumCoeffs==0) # first remove vars w/ no relationship
+  # next remove the var with the smallest contribution & test for significance
+  if(length(varRem)==0) {varRem <- max(which(sumCoeffs==min(sumCoeffs)))}
+  if(geo) {varRem <- varRem+1}
+  cat("Variables to be removed: ", fill=T)
+  cat(names(envMod)[varRem], fill=T)
+  envModNew <- envMod[,-varRem]
+  
+  cat("Modeling using reduced env dataset...", fill=T)
+  flush.console()
+  GDM2 <- gdm.fit(envModNew, spp, geo=geo, wtype=wtype)
+  cat("Deviance full model = ", GDM1$explained, fill=T)
+  cat("Deviance reduced model = ", GDM2$explained, fill=T)
+  devDiff <- 100*(abs(GDM1$explained - GDM2$explained)/mean(c(GDM1$explained,
+                                                              GDM2$explained)))
+  cat("Percent difference in deviance= ", devDiff, fill=T)
+  
+  # if the difference in deviance is large (>0.5% in this case), then run
+  # nperm permutations to test for significance
+  if(devDiff>0.5){
+    permDev1 <- NULL
+    permDev2 <- NULL
+    
+    for (i in 1:nperm){ # loop for permutations
+      sppdatPerm <- spp[sample(seq(1, nrow(spp)), nrow(spp), replace=F),]
+      permGDM1 <- gdm.fit(envMod, sppdatPerm, geo=geo, wtype=wtype)
+      permGDM2 <- gdm.fit(envModNew, sppdatPerm, geo=geo, wtype=wtype)
+      permDev1[i] <- permGDM1$explained
+      permDev2[i] <- permGDM2$explained
+      permDiffDev <- 100*(abs(permGDM1$explained - permGDM2$explained)/mean(c(permGDM1$explained,
+                                                                              permGDM2$explained)))
+      cat((i/nperm)*100, "% COMPLETE", fill=TRUE)
+      flush.console()
+    }
+    pval <- sum(devDiff < permDiffDev)/nperm
+  }
+  if(pval > 0.05){envMod <- envModNew}
+  flush.console()
+  cat("pval=", pval, fill=TRUE)
+  cat("Vars= ", names(envMod), fill=T)
+  cat("", fill=TRUE)
+  gc()
+}
+dput(names(envMod), "...") # save names of significant variables
+################################################################################
+
+
+################################################################################
+# CHUNK 3: Fit GDMs
+################################################################################
+source("gdmfuncs.1.1.R")
+vars <- dget("...") # variable list (e.g., produced in CHUNK 2)
+gdmDat <- read.csv("...") # env and species data table (e.g. from in CHUNK 1)
+
+# extract env and species data (edit indices as needed)
+env <- gdmDat[,1:12] 
+spp <- gdmDat[,13:ncol(gdmDat)]
+env <-  env[,vars] # use only significant variables
+
+#################
+# remove sites with fewer than 5 species (to reduce influence of poor sampling)
+# Used in SWWA datasets only
+rich=5
+spp.clean <- spp[rowSums(spp)>=rich,]
+env <- env[rowSums(spp)>=rich,]
+spp <- spp.clean[,colSums(spp.clean)>0]
+#################
+
+# now fit three GDMs using: (1) both env and geo vars, (2) env only, (3) geo only
+geo=T
+if(geo){envMod <- env} else{envMod <- env[,-c(1,2)]}
+gdm.All <- gdm.fit(envMod, spp, geo=geo, wtype="standard") # all sig. vars
+gdm.summary(gdm.All)
+gdm.plot(gdm.All,envMod,spp)
+
+geo=F
+if(geo){envMod <- env} else{envMod <- env[,-c(1,2)]}
+gdm.Env <- gdm.fit(envMod, spp, geo=geo, wtype="standard") # env only
+gdm.summary(gdm.Env)
+gdm.plot(gdm.Env,envMod,spp)
+
+geo=T
+if(geo){envMod <- env} else{envMod <- env[,-c(1,2)]}
+gdm.XY <- gdm.fit(envMod[,1:2], spp, geo=geo, wtype="standard") # geo only
+gdm.summary(gdm.XY)
+gdm.plot(gdm.XY,envMod,spp)
+
+# extract deviance explpained & calculate unique & shared contributions
+gdm..devAll <- gdm.All$explained
+gdm..devEnv <- gdm.Env$explained
+gdm..devXY <- gdm.XY$explained
+gdm..pDevEnv <- (gdm..devAll-gdm..devXY)/gdm..devAll
+gdm..pDevXY <- (gdm..devAll-gdm..devEnv)/gdm..devAll
+gdm..pDevAll <- 1 - gdm..pDevEnv - gdm..pDevXY
+
+cat("gdm.All Deviance = ", gdm..devAll, fill=T)
+cat("gdm.Env Deviance = ", gdm..devEnv, fill=T)
+cat("gdm.XY Deviance = ", gdm..devXY, fill=T)
+cat("gdm.All Proportion = ", gdm..pDevAll, fill=T)
+cat("gdm.Env Proportion = ", gdm..pDevEnv, fill=T)
+cat("gdm.XY Proportion = ", gdm..pDevXY, fill=T)
+
+save.image("...")
+################################################################################
+
+
+################################################################################
+# CHUNK 4: Distance-decay modeling using log-linear method 
+################################################################################
+library(corpcor)
+library(vegan)
+library(hier.part)
+
+gdmDat <- read.csv("...") # env and species data table (e.g. from in CHUNK 1)
+
+# extract env and species data (edit indices as needed)
+env <- gdmDat[,1:12] 
+spp <- gdmDat[,13:ncol(gdmDat)]
+
+#################
+# remove sites with fewer than 5 species (to reduce influence of poor sampling)
+# Used in SWWA datasets only
+rich=5
+spp.clean <- spp[rowSums(spp)>=rich,]
+env <- env[rowSums(spp)>=rich,]
+spp <- spp.clean[,colSums(spp.clean)>0]
+#################
+
+# scale env variables
+envS <- env
+envS[,3:ncol(env)] <- scale(env[,3:ncol(env)]) # edit indices as needed
+env <- envS
+
+# calculate env / geo distances between cells...edit as needed for other vars
+geo=as.vector(dist(env[,1:2],method="euclidean"))
+bio19 <- as.vector(dist(env[,"bio19"],method="euclidean"))
+
+# compositional dissimilarity
+s <- as.vector(1-vegdist(spp, "bray")) # spp dissm.
+
+env.part <- cbind(geo, bio5, bio6, bio15, bio18, bio19, awcA, phTotal, sandA, 
+                  shcA, soilDepth)
+
+# Log-linear models -------------------------------------------------------
+glm_geo <- glm(log(s+0.01)~geo)
+glm_env <- glm(log(s+0.01)~awcA+phTotal+sandA+solumDepth+bio5+bio19)
+glm_both <- glm(log(s+0.01)~geo+awcA+phTotal+sandA+solumDepth+bio5+bio19)
+
+devGeo <- 1-glm_geo$deviance/glm_geo$null.deviance*100
+devEnv <- 1-glm_env$deviance/glm_env$null.deviance*100
+devBoth <- 1-glm_both$deviance/glm_both$null.deviance*100
+
+d.geo <- (devBoth-devEnv)/devBoth*100
+d.env <- (devBoth-devGeo)/devBoth*100
+d.both <- (1-d.geo-d.env)*100
+# Log-linear models -------------------------------------------------------
+
+# variable importance
+wa.hier <- hier.part(log(s+0.01), env.part, gof="logLik")
+################################################################################
