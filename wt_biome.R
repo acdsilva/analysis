@@ -28,18 +28,17 @@ eventmatrix=ddply(data,.(hour,date,locality),
                   sdTemp=sd(temperature)
                   
 )
-##fazendo algumas alterações no script do Agustin
+##fazendo algumas altera??es no script do Agustin
 # Calculate the daily mean OT and the daily maximal range in simultaneously measured OT
-ctmatrix=ddply(data2,.(bioma,localidade,ordem,alt,tcmax),
+ctmatrix=ddply(data2,.(bioma,localidade, peso, alt,tcmax),
                   summarise,
                   meanCT=mean(tcmax),
                   minCT=min(tcmax),
                   maxCT=max(tcmax),
-                  varmaxCT=sd(tcmax),
                   minsize=min(peso),
                   maxsize=max(peso),
                   resbodysize=resid(peso),
-                  bodysize=sqrt(maxsize-minsize)+1,
+                  bodysize=log10(peso)+1,
                   meanTE=mean(tempSOL),
                   minTE=min(tempSOL),
                   maxTE=max(tempSOL),
@@ -72,7 +71,7 @@ m2=lmer(maxerror~(1|locality),data=dailymatrix)
 anova(m1,m2)
 summary(m1)
 
-#######fazendo algumas alterações no script do Agustin
+#######fazendo algumas altera??es no script do Agustin
 # Compare the relationship of mean temperatures critical maximum with the  maxerror 
 m3=lmer(bodysize~tcmax +(1|localidade),data=ctmatrix)
 m4=lmer(bodysize~(1|localidade),data=ctmatrix)
@@ -95,10 +94,10 @@ plot(lm1)
 plot(lm2)
 plot(lm3)
 
-## repetindo um gráfico de Camachoet al 2015. Observar como seus dados se comportam
+## repetindo um gr?fico de Camachoet al 2015. Observar como seus dados se comportam
 a=ctmatrix$tcmax
 b=ctmatrix$bodysize
-plot(b,a, xlab = "Peso(mg)", ylab = "Temperatura Crítica Máxima (°C)")
+plot(b,a, xlab = "Peso(mg)", ylab = "Temperatura Cr?tica M?xima (?C)")
 
 # test if there is correlation of residuals with index (autocorrelation)
 summary(lm(residuals(m3)~seq(1:length(residuals(m3)))))# no autocorrelation
