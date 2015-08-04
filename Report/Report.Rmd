@@ -92,11 +92,11 @@ ggplot(dados, aes(x = tcmax)) + geom_histogram(binwidth = 0.5) +
 
 
 ```{r dispers, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=10, fig.width=12, fig.cap= ' Distribuição de tcMax'}
-plot(dados[which(dados$temp.conf == 'Sim'),c('tcmax','tempSOL', 'lat', 'long','alt')])
+plot(dados[, c('tcmax','tempSOL', 'lat', 'long','alt')])
 ```
 
 ```{r corr, cache=TRUE, echo=TRUE}
-cor(dados[which(dados$temp.conf == 'Sim'), c('tcmax','tempSOL', 'lat', 'long','alt')])
+cor(dados[, c('tcmax','tempSOL', 'lat', 'long','alt')])
 ```
 
 Pelo gráfico de disperção acima e matriz de correlação, notamos que das variáveis que descrevem os biomas, a *tempSOL* foi a que teve a melhor associação com a *tcmax*. A distribuição da *tempSOL* por classe em diferentes biomas está a seguir. 
