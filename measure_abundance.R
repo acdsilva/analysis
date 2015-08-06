@@ -31,6 +31,7 @@ medidas.abundancia <- data.frame(prop.Pseudoscorpionida =
                                  prop.Scorpiones=abu$Scorpiones/sum(abu$Scorpiones),
                                  prop.Scutigeromorpha=abu$Stemmiulida/sum(abu$Stemmiulida),
                                  prop.Scolopendromorph=abu$Scolopendromorpha/sum(abu$Scolopendromorpha))
+summary(medidas.abundancia)
 
 
 ##sum(abu$Pseudoscorpionida)#
@@ -47,22 +48,22 @@ library("ggplot2")
 abu <- read.delim(file = 'abu.txt',sep = "", dec = ".", header = TRUE)
 
 ##diversity
-diversity(abu3, index = "shannon", MARGIN = 1, base = exp(1))
-diversity(abu3, index = "simpson", MARGIN = 1, base = exp(1))
+shadiver<-diversity(abu, index = "shannon", MARGIN = 1, base = exp(1))
+simdiver<-diversity(abu, index = "simpson", MARGIN = 1, base = exp(1))
 
 #simplify the diversity index
 ##data(abu)## Use the current data.frame
-H <- diversity(abu3)
-simp <- diversity(abu3, "simpson")
-invsimp <- diversity(abu3, "inv")
+H <- diversity(abu)
+simp <- diversity(abu, "simpson")
+invsimp <- diversity(abu, "inv")
 ## Unbiased Simpson of Hurlbert 1971 (eq. 5):
-unbias.simp <- rarefy(abu3, 2) - 1
+unbias.simp <- rarefy(abu, 2) - 1
 ## Fisher alpha
-alpha <- fisher.alpha(abu3)
+alpha <- fisher.alpha(abu)
 ##Plot all index
-pairs(cbind(H, simp, invsimp, unbias.simp, alpha), pch="+", col="blue")
+pairs(cbind(H, simp, invsimp, unbias.simp, alpha), pch="+", col="blue" )
 ## Species richness (S) adaptated vegan eg.
-S <- specnumber(abu3) ## rowSums(abu > 0) 
+S <- specnumber(abu2) ## rowSums(abu > 0) 
 # To calculate Pielou's evenness (J)
 J <- H/log(S)
 
