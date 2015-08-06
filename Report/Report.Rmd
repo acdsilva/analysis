@@ -12,6 +12,7 @@ output:
 library(reshape2)
 library(ggplot2)
 library(lme4)
+library(lattice)
 ```
 
 # Análise do banco de dados
@@ -19,14 +20,21 @@ Verificar quais as variáveis estão associadas com *TcMax*.
 
 ```{r carregando, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
 dados <- read.csv("../tese.csv", header = TRUE, sep = ";", dec = ".")# precisa alterar para abrir local
+#dados <- read.csv("../tese.csv", header = TRUE, sep = ";", dec = ".")
+#dados <- read.csv("../tese01.csv", header = TRUE, sep = ";", dec = ".")
+dados <- read.csv("../Tese/tese05.csv", header = TRUE, sep = ";", dec = ".")
 levels(dados$localidade) <- c("Amazonia", "Caatinga", "Cerrado", "Mata Atlântica de Altitude", "Mata Atlântica")
-summary(dados)
+levels(dados$temp.conf) <- c("Não", "Sim")
+
+dados[,'hora.2'] <- as.integer(substring(dados$hora, 1,2))
+dados[,'mes.2'] <- substring(dados$mes, 1,3)
+
 estacoes <- read.csv("../temp_WS.csv", header = TRUE, sep = ";", dec = ".")[, -c(12, 13, 14)]
 estacoes[, 'Bioma'] <- 'Não Definido'
 estacoes[which(estacoes$WSlocality == 'Manaus'), 'Bioma'] <- 'Amazônia'
 estacoes[which(estacoes$WSlocality == 'CamposdoJordao'), 'Bioma'] <- 'Mata Atântica de Altitude'
 estacoes[which(estacoes$WSlocality == 'Guarulhos'), 'Bioma'] <- 'Mata Atântica'
-estacoes[which(estacoes$WSlocality == 'Sao Carlos'), 'Bioma'] <- 'Cerrado'
+estacoes[which(estacoes$WSlocality == 'S\xe3o Carlos'), 'Bioma'] <- 'Cerrado'
 estacoes[which(estacoes$WSlocality == 'Florania'), 'Bioma'] <- 'Caatinga'
 
 estacoes.Data <- aggregate(temperature ~ Bioma, data = estacoes, mean)
@@ -43,63 +51,209 @@ estacoes.Data[, 'Amplitude'] <- estacoes.Data$Max - estacoes.Data$Min
 Abaixo estão os histogramas que apresentam a distribuição dos *tcmax* por bioma.
 
 ```{r ditr.bioma, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=6, fig.width=4, fig.cap=' Distribuição de tcMax'}
-ggplot(dados, aes(x = tcmax)) + geom_histogram(binwidth = 0.5) +
-  geom_histogram(colour = "white") +
+ggplot(dados, aes(x = tcmax)) + geom_histogram(binwidth = 1.5, colour = "white") +
   #geom_vline(x = mean(dados$tcmax), colour = 'blue') +
   facet_wrap( ~ localidade, scale = 'free_y', ncol = 1) + theme_bw()
 ```
-Criando uma segunda matrix para covariacao do tcmax
-```{r cov.tcmax,cache=TRUE,echo=FALSE,warning=FALSE,message=FALSE}
-ordem.Data <- aggregate(tcmax ~ ordem, data = dados, mean)
-classe.Data<-aggregate(tcmax ~ classe, data = dados, mean)
 
-plot(ordem.Data)
-plot(classe.Data)
-
-
-
-
+```{r ditr.bioma.class, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=8, fig.width=8, fig.cap=' Distribuição de tcMax'}
+ggplot(dados, aes(x = tcmax)) + geom_histogram(binwidth = 1.5, aes(fill = classe),
+                                               alpha = 0.6, position="identity") +
+  #geom_vline(x = mean(dados$tcmax), colour = 'blue') +
+  facet_wrap( ~ localidade, scale = 'free_y', ncol = 1) + theme_bw()
 ```
 
 Como a distribuição possui diferentes animais, estudamos a distruibuição dos *tcmax* por classe em diferentes biomas e verificamos que numa mesma classe a distribuição dos *tcmax* se ajustam aos biomas, como visto nas distribuições a seguir.
 
 ```{r ditr.Classe.bioma, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=10, fig.width=12, fig.cap= ' Distribuição de tcMax'}
+#media.Biomas <- aggregate(tcmax ~ localidade, data = dados, mean)
 ggplot(dados, aes(x = tcmax)) + geom_histogram(binwidth = 0.5) +
   geom_histogram(colour = "white") +
+#   geom_vline(data = media.Biomas, aes(group = localidade, xintercept = tcmax),
+#              colour = 'blue') +
   xlab("Temperatura crítica máxima") + ylab("Número de indivíduos") +
-#   geom_vline(x = mean(dados$tcmax), colour = 'blue') +
   facet_grid(localidade ~ classe, scale = 'free_y') + theme_bw() +
   theme(axis.text=element_text(face='plain'),
         axis.title=element_text(face="bold"),
-        strip.text=element_text(size = 9, face="bold"))  
+        strip.text=element_text(size = 9, face="bold")) 
 ```
 
-Das variáveis que descrevem os biomas, a *tempSOL* foi a que teve a melhor associação com a *tcmax*. A distribuição da *tempSOL* por classe em diferentes biomas está a seguir. 
+```{r ditr.bioma.classe, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=10, fig.width=12, fig.cap= ' Distribuição de tcMax'}
+#media.Biomas <- aggregate(tcmax ~ localidade, data = dados, mean)
+ggplot(dados, aes(x = tcmax)) + geom_histogram(binwidth = 0.5) +
+  geom_histogram(colour = "white") +
+#   geom_vline(data = media.Biomas, aes(group = localidade, xintercept = tcmax),
+#              colour = 'blue') +
+  xlab("Temperatura crítica máxima") + ylab("Número de indivíduos") +
+  facet_grid(classe ~ localidade, scale = 'free_y') + theme_bw() +
+  theme(axis.text=element_text(face='plain'),
+        axis.title=element_text(face="bold"),
+        strip.text=element_text(size = 9, face="bold")) 
+```
+
+
+```{r dispers, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=10, fig.width=12, fig.cap= ' Distribuição de tcMax'}
+plot(dados[, c('tcmax','tempSOL', 'lat', 'long','alt')])
+```
+
+```{r corr, cache=TRUE, echo=TRUE}
+cor(dados[, c('tcmax','tempSOL', 'lat', 'long','alt')])
+```
+
+Pelo gráfico de disperção acima e matriz de correlação, notamos que das variáveis que descrevem os biomas, a *tempSOL* foi a que teve a melhor associação com a *tcmax*. A distribuição da *tempSOL* por classe em diferentes biomas está a seguir. 
 
 ```{r ditr.temSol.bioma, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=10, fig.width=12, fig.cap= ' Distribuição de TempSol'}
 ggplot(dados, aes(x = tempSOL)) + geom_histogram(binwidth = 0.5) +
   geom_histogram(colour = "white") +
-  xlab("Temperatura do solo (x cm de profundidade)") + ylab("Número de pontos de amostragem") +
+  xlab("Temperatura do solo (2 cm de profundidade)") + ylab("Número de pontos de amostragem") +
 #   geom_vline(x = mean(dados$tempSOL), colour = 'blue') +
   facet_grid(localidade ~ classe, scale = 'free') + theme_bw() +
   theme(axis.text=element_text(face='plain'),
         axis.title=element_text(face="bold"),
-        strip.text=element_text(size = 9, face="bold"))  
-
+        strip.text=element_text(size = 9, face="bold"))
 ```
 
-## Modelo regressão (efeito misto) considerando os biomas
 
-O primeiro modelo considerado é o modelo de efeitos mistos onde a 
+## Regressão linear simples
 
-```{r mixed.effect.Model, cache=TRUE, echo=FALSE}
-# assume an intercept and slope that are different for each subject and they are
-# correlated
-#restricted maximum likelihood estimation REML
-fit.mixed.2effects <- lmer(tcmax ~ 1 + tempSOL + (1 + tempSOL | localidade), data = dados, REML = F)
+Com base na análise descritiva, estudamos modelos de regressão simples com as variáveis extraídas da matriz de correlação.
+
+### Modelo com variáveis geográficas
+```{r lm.model, echo=FALSE, cache=TRUE}
+fit.lm <- lm(tcmax ~ lat + long, data = dados)
+summary(fit.lm)
 ```
 
-```{r mixed.effect.Summary, cache=TRUE, echo=TRUE}
-summary(fit.mixed.2effects)
+Os intervalos de confianção de 95% para os parâmetros associados à latitude e longitude estão nos gráficos abaixo:
+
+```{r model.data, echo=FALSE, cache=TRUE, fig.height= 2, fig.width=4}
+ci.fit <- cbind.data.frame(confint(fit.lm), coefficients(fit.lm))
+colnames(ci.fit)[3] <- 'Estimativa'
+colnames(ci.fit)[1:2] <- c('lo', 'hi')
+ci.fit[,'coeficientes']  <- c('Intercepto', 'Latitude', 'Longitude')
+
+ggplot(data = ci.fit[-1,], aes(x = Estimativa, y= coeficientes)) + geom_point(size = 1.2) +
+  geom_errorbarh(aes(xmin = lo, xmax = hi), height = 0) +
+  theme_bw() + xlab("Valores") + ylab("Parâmetros") +
+  theme(axis.text=element_text(size=8,face='plain'),
+        axis.title=element_text(size=10,face="bold"),
+        strip.text=element_text(size=9,face="plain"),
+        title=element_text(size=11,face="plain"),
+        legend.text=element_text(size=9,face="plain"))
 ```
 
+A análise de resíduo: 
+
+```{r res.analys.lm, cache=TRUE, echo=FALSE}
+residuos <- data.frame(rsut= rstudent(fit.lm), fitados = fitted(fit.lm), Ordem = 1:length(fitted(fit.lm)))
+cook.dist <- cooks.distance(fit.lm)
+influecia <- dfbeta(fit.lm)
+#sem pontos de influência
+#which(abs(influecia[,'long'])>0.064445)
+```
+
+```{r qqnorm, cache=TRUE,echo=FALSE}
+qqnorm(rstudent(fit.lm), main="QQ Plot para os Residuals Studentizados")
+qqline(rstudent(fit.lm))
+```
+
+
+```{r residuos.stu, echo=FALSE, cache=TRUE}
+ggplot(residuos, aes(x = fitados, y = rsut)) + geom_point(size=1) + ggtitle('Gráfico de Resíduos') +
+  xlab('Valores Ajustados') + ylab('Resíduos Studentizados') + ylim(c(-5,5)) +
+  geom_rect(aes(ymin=-2, ymax=2, xmin=-Inf, xmax=Inf), alpha=0.002) + geom_abline(slope=0, intercept=0)
+```
+
+
+### Modelo com variável local
+```{r lm.model3, echo=FALSE, cache=TRUE}
+fit.lm3 <- lm(tcmax ~ tempSOL, data = dados)
+summary(fit.lm3)
+```
+
+Os intervalos de confianção de 95% para os parâmetros associados à latitude e longitude estão nos gráficos abaixo:
+
+```{r model.data3, echo=FALSE, cache=TRUE, fig.height= 2, fig.width=4}
+ci.fit3 <- cbind.data.frame(confint(fit.lm3), coefficients(fit.lm3))
+colnames(ci.fit3)[3] <- 'Estimativa'
+colnames(ci.fit3)[1:2] <- c('lo', 'hi')
+ci.fit3[,'coeficientes']  <- c('Intercepto', 'Temperatura do solo')
+
+ggplot(data = ci.fit3[-1,], aes(x = Estimativa, y= coeficientes)) + geom_point(size = 1.2) +
+  geom_errorbarh(aes(xmin = lo, xmax = hi), height = 0) +
+  theme_bw() + xlab("Valores") + ylab("Parâmetros") +
+  theme(axis.text=element_text(size=8,face='plain'),
+        axis.title=element_text(size=10,face="bold"),
+        strip.text=element_text(size=9,face="plain"),
+        title=element_text(size=11,face="plain"),
+        legend.text=element_text(size=9,face="plain"))
+```
+
+A análise de resíduo:
+
+```{r res.analys.lm3, cache=TRUE, echo=FALSE}
+residuos3 <- data.frame(rsut= rstudent(fit.lm3), fitados = fitted(fit.lm3), Ordem = 1:length(fitted(fit.lm3)))
+cook.dist3 <- cooks.distance(fit.lm3)
+influecia3 <- dfbeta(fit.lm3)
+#sem pontos de influência
+#which(abs(influecia[,'long'])>0.064445)
+```
+
+```{r qqnorm3, cache=TRUE,echo=FALSE}
+qqnorm(rstudent(fit.lm3), main="QQ Plot para os Residuals Studentizados")
+qqline(rstudent(fit.lm3))
+```
+
+
+```{r residuos.stu3, echo=FALSE, cache=TRUE}
+ggplot(residuos3, aes(x = fitados, y = rsut)) + geom_point(size=1) + ggtitle('Gráfico de Resíduos') +
+  xlab('Valores Ajustados') + ylab('Resíduos Studentizados') + ylim(c(-5,5)) +
+  geom_rect(aes(ymin=-2, ymax=2, xmin=-Inf, xmax=Inf), alpha=0.002) + geom_abline(slope=0, intercept=0)
+```
+
+
+### Modelo com variáveis geográficas e locais
+```{r lm.model2, echo=FALSE, cache=TRUE}
+fit.lm2 <- lm(tcmax ~ lat + long + tempSOL, data = dados)
+summary(fit.lm2)
+```
+
+Os intervalos de confianção de 95% para os parâmetros associados à latitude e longitude estão nos gráficos abaixo:
+
+```{r model.data2, echo=FALSE, cache=TRUE, fig.height= 2, fig.width=4}
+ci.fit2 <- cbind.data.frame(confint(fit.lm2), coefficients(fit.lm2))
+colnames(ci.fit2)[3] <- 'Estimativa'
+colnames(ci.fit2)[1:2] <- c('lo', 'hi')
+ci.fit2[,'coeficientes']  <- c('Intercepto', 'Latitude', 'Longitude', 'Temperatura do solo')
+
+ggplot(data = ci.fit2[-1,], aes(x = Estimativa, y= coeficientes)) + geom_point(size = 1.2) +
+  geom_errorbarh(aes(xmin = lo, xmax = hi), height = 0) +
+  theme_bw() + xlab("Valores") + ylab("Parâmetros") +
+  theme(axis.text=element_text(size=8,face='plain'),
+        axis.title=element_text(size=10,face="bold"),
+        strip.text=element_text(size=9,face="plain"),
+        title=element_text(size=11,face="plain"),
+        legend.text=element_text(size=9,face="plain"))
+```
+
+A análise de resíduo:
+
+```{r res.analys.lm2, cache=TRUE, echo=FALSE}
+residuos2 <- data.frame(rsut= rstudent(fit.lm2), fitados = fitted(fit.lm2), Ordem = 1:length(fitted(fit.lm2)))
+cook.dist2 <- cooks.distance(fit.lm2)
+influecia2 <- dfbeta(fit.lm2)
+#sem pontos de influência
+#which(abs(influecia[,'long'])>0.064445)
+```
+
+```{r qqnorm2, cache=TRUE,echo=FALSE}
+qqnorm(rstudent(fit.lm2), main="QQ Plot para os Residuals Studentizados")
+qqline(rstudent(fit.lm2))
+```
+
+
+```{r residuos.stu2, echo=FALSE, cache=TRUE}
+ggplot(residuos2, aes(x = fitados, y = rsut)) + geom_point(size=1) + ggtitle('Gráfico de Resíduos') +
+  xlab('Valores Ajustados') + ylab('Resíduos Studentizados') + ylim(c(-5,5)) +
+  geom_rect(aes(ymin=-2, ymax=2, xmin=-Inf, xmax=Inf), alpha=0.002) + geom_abline(slope=0, intercept=0)
+```
