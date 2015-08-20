@@ -13,16 +13,20 @@ library(reshape2)
 library(ggplot2)
 library(lme4)
 library(lattice)
+library(PMCMR)
 ```
 
 # Análise do banco de dados
 Verificar quais as variáveis estão associadas com *TcMax*.
+Com a diversidade de artropodes e habitats eu hipotetizo que deve existir uma diversidade de requerimentos termais e mecanismos termorregulatorios (sic. brattstrom,1991)
 
 ```{r carregando, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
 dados <- read.csv("../tese.csv", header = TRUE, sep = ";", dec = ".")# precisa alterar para abrir local
+#dados <- read.csv("../tese.csv", header = TRUE, sep = ";", dec = ".")# precisa alterar para abrir local
 #dados <- read.csv("../tese.csv", header = TRUE, sep = ";", dec = ".")
 #dados <- read.csv("../tese01.csv", header = TRUE, sep = ";", dec = ".")
 dados <- read.csv("../Tese/tese05.csv", header = TRUE, sep = ";", dec = ".")
+dados <- read.csv("../tese05.csv", header = TRUE, sep = ";", dec = ".")
 levels(dados$localidade) <- c("Amazonia", "Caatinga", "Cerrado", "Mata Atlântica de Altitude", "Mata Atlântica")
 levels(dados$temp.conf) <- c("Não", "Sim")
 
@@ -56,11 +60,58 @@ ggplot(dados, aes(x = tcmax)) + geom_histogram(binwidth = 1.5, colour = "white")
   facet_wrap( ~ localidade, scale = 'free_y', ncol = 1) + theme_bw()
 ```
 
+
+Aqui Consideramos a distribuição das classes que orientaram o trabalho.
 ```{r ditr.bioma.class, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE, fig.height=8, fig.width=8, fig.cap=' Distribuição de tcMax'}
 ggplot(dados, aes(x = tcmax)) + geom_histogram(binwidth = 1.5, aes(fill = classe),
                                                alpha = 0.6, position="identity") +
   #geom_vline(x = mean(dados$tcmax), colour = 'blue') +
   facet_wrap( ~ localidade, scale = 'free_y', ncol = 1) + theme_bw()
+```
+A distribuição de temperaturas críticas máximas não é igual em todos os biomas.
+referencia(http://rcompanion.org/rcompanion/d_06.html)
+
+```{r anova.fit, cache=TRUE, echo=FALSE, message=TRUE,warning=TRUE}
+#fit <- aov(localidade ~ tcmax, data=dados)
+fit <- aov(bioma ~ tcmax, data=dados)
+summary(fit)                                    #show the summary table
+print(model.tables(fit,"means"),digits=3)
+shapiro.test(dados$tcmax)#Se ele for maior do que 5%, então podemos afirmar com 95% de confiança que a hipótese nula não foi rejeitada e que a variável possui distribuição normal. 
+hist(dados$tcmax)
+View(dados)
+
+##testando pressupostos para anova - normalidade
+shapiro.test(dados$tcmax[which(dados$localidade == 'Cerrado')])
+shapiro.test(dados$tcmax[which(dados$localidade == 'Caatinga')])
+shapiro.test(dados$tcmax[which(dados$localidade == 'Amazonia')])
+shapiro.test(dados$tcmax[which(dados$localidade == 'Mata Atlântica')])
+shapiro.test(dados$tcmax[which(dados$localidade == 'Mata Atlântica de Altitude')])
+
+
+##teste de homocedasticidade - é a propriedade de duas variáveis possuirem a mesma variância (ou desvio padrão).
+
+bartlett.test(dados$tcmax,dados$localidade == 'Cerrado')
+bartlett.test(dados$tcmax,dados$localidade == 'Caatinga')
+bartlett.test(dados$tcmax,dados$localidade == 'Amazonia')
+bartlett.test(dados$tcmax,dados$localidade == 'Mata Atlântica')
+bartlett.test(dados$tcmax,dados$localidade == 'Mata Atlântica de Altitude')
+
+#### testando os non parametric
+require(PMCMR)
+# Kruskal Wallis Test One Way Anova by Ranks
+kruskal.test(tcmax~localidade, data = dados) # where y1(tcmax) is numeric and A(localidade) is a factor
+
+##post hoc test for Kruskall Wallis test
+posthoc.kruskal.nemenyi.test(x=dados$tcmax, g=dados$localidade, dist ="Chisq")# x= dados de interesse, g= fator de separacao
+
+
+##Outro post.hoc.test usando a funcao FDR(false discovery rate)
+require(DescTools)
+DunnTest(x = dados$tcmax,
+         g = dados$localidade,
+         method="fdr")    # Can adjust p-values; 
+                           # See ?p.adjust for options
+
 ```
 
 Como a distribuição possui diferentes animais, estudamos a distruibuição dos *tcmax* por classe em diferentes biomas e verificamos que numa mesma classe a distribuição dos *tcmax* se ajustam aos biomas, como visto nas distribuições a seguir.
