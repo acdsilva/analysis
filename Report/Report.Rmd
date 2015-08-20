@@ -210,6 +210,55 @@ ggplot(residuos3, aes(x = fitados, y = rsut)) + geom_point(size=1) + ggtitle('Gr
   geom_rect(aes(ymin=-2, ymax=2, xmin=-Inf, xmax=Inf), alpha=0.002) + geom_abline(slope=0, intercept=0)
 ```
 
+Refazendo o ajuste, porém, excluindo os pontos da caatinga que apresentaram temperaturas de solo duvidosas, temos os seguintes resultados
+
+```{r lm.model3.SemDuvidosos, echo=FALSE, cache=TRUE}
+fit.lm3.sem.duvidosos <- lm(tcmax ~ tempSOL, data = dados[which(dados$tempSOL < 50),])
+summary(fit.lm3.sem.duvidosos)
+```
+
+Os intervalos de confianção de 95% para os parâmetros associados à latitude e longitude estão nos gráficos abaixo:
+
+```{r model.data3.SemDuvidosos, echo=FALSE, cache=TRUE, fig.height= 2, fig.width=4}
+ci.fit3.sem.duvidosos <- cbind.data.frame(confint(fit.lm3.sem.duvidosos), coefficients(fit.lm3.sem.duvidosos))
+colnames(ci.fit3.sem.duvidosos)[3] <- 'Estimativa'
+colnames(ci.fit3.sem.duvidosos)[1:2] <- c('lo', 'hi')
+ci.fit3.sem.duvidosos[,'coeficientes']  <- c('Intercepto', 'Temperatura do solo')
+
+ggplot(data = ci.fit3.sem.duvidosos[-1,], aes(x = Estimativa, y= coeficientes)) + geom_point(size = 1.2) +
+  geom_errorbarh(aes(xmin = lo, xmax = hi), height = 0) +
+  theme_bw() + xlab("Valores") + ylab("Parâmetros") +
+  theme(axis.text=element_text(size=8,face='plain'),
+        axis.title=element_text(size=10,face="bold"),
+        strip.text=element_text(size=9,face="plain"),
+        title=element_text(size=11,face="plain"),
+        legend.text=element_text(size=9,face="plain"))
+```
+
+A análise de resíduo:
+
+```{r res.analys.lm3.SemDuvidosos, cache=TRUE, echo=FALSE}
+residuos3.sem.duvidosos <- data.frame(rsut= rstudent(fit.lm3.sem.duvidosos),
+                                      fitados = fitted(fit.lm3.sem.duvidosos), 
+                                      Ordem = 1:length(fitted(fit.lm3.sem.duvidosos)))
+#cook.dist3 <- cooks.distance(fit.lm3)
+#influecia3 <- dfbeta(fit.lm3)
+#sem pontos de influência
+#which(abs(influecia[,'long'])>0.064445)
+```
+
+```{r qqnorm3.SemDuvidosos, cache=TRUE,echo=FALSE}
+qqnorm(rstudent(fit.lm3.sem.duvidosos), main="QQ Plot para os Residuals Studentizados")
+qqline(rstudent(fit.lm3.sem.duvidosos))
+```
+
+
+```{r residuos.stu3.SemDuvidosos, echo=FALSE, cache=TRUE}
+ggplot(residuos3.sem.duvidosos, aes(x = fitados, y = rsut)) + geom_point(size=1) +
+  ggtitle('Gráfico de Resíduos') +  xlab('Valores Ajustados') + ylab('Resíduos Studentizados') + ylim(c(-5,5)) +
+  geom_rect(aes(ymin=-2, ymax=2, xmin=-Inf, xmax=Inf), alpha=0.002) + geom_abline(slope=0, intercept=0)
+```
+
 
 ### Modelo com variáveis geográficas e locais
 ```{r lm.model2, echo=FALSE, cache=TRUE}
