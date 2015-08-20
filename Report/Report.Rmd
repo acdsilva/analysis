@@ -21,7 +21,6 @@ Verificar quais as variáveis estão associadas com *TcMax*.
 Com a diversidade de artropodes e habitats eu hipotetizo que deve existir uma diversidade de requerimentos termais e mecanismos termorregulatorios (sic. brattstrom,1991)
 
 ```{r carregando, cache=TRUE, echo=FALSE, warning=FALSE, message=FALSE}
-dados <- read.csv("../tese.csv", header = TRUE, sep = ";", dec = ".")# precisa alterar para abrir local
 #dados <- read.csv("../tese.csv", header = TRUE, sep = ";", dec = ".")# precisa alterar para abrir local
 #dados <- read.csv("../tese.csv", header = TRUE, sep = ";", dec = ".")
 #dados <- read.csv("../tese01.csv", header = TRUE, sep = ";", dec = ".")
