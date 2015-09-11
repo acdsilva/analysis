@@ -26,14 +26,14 @@ Com a diversidade de artropodes e habitats eu hipotetizo que deve existir uma di
 #dados <- read.csv("../tese01.csv", header = TRUE, sep = ";", dec = ".")
 #dados <- read.csv("../Tese/tese05.csv", header = TRUE, sep = ";", dec = ".")
 #dados <- read.csv("../Tese/tese05.csv", header = TRUE, sep = ";", dec = ".")
-dados <- read.csv("../tese05.csv", header = TRUE, sep = ";", dec = ".")
+dados <- read.csv("~/R/analysis_beta/tese05.csv", header = TRUE, sep = ";", dec = ".")
 levels(dados$localidade) <- c("Amazonia", "Caatinga", "Cerrado", "Mata Atlântica de Altitude", "Mata Atlântica")
 levels(dados$temp.conf) <- c("Não", "Sim")
 
 dados[,'hora.2'] <- as.integer(substring(dados$hora, 1,2))
 dados[,'mes.2'] <- substring(dados$mes, 1,3)
 
-estacoes <- read.csv("../temp_WS.csv", header = TRUE, sep = ";", dec = ".")[, -c(12, 13, 14)]
+estacoes <- read.csv("~/R/analysis_beta/temp_WS.csv", header = TRUE, sep = ";", dec = ".")[, -c(12, 13, 14)]
 estacoes[, 'Bioma'] <- 'Não Definido'
 estacoes[which(estacoes$WSlocality == 'Manaus'), 'Bioma'] <- 'Amazônia'
 estacoes[which(estacoes$WSlocality == 'CamposdoJordao'), 'Bioma'] <- 'Mata Atântica de Altitude'
