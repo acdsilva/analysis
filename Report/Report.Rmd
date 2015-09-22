@@ -14,6 +14,7 @@ library(ggplot2)
 library(lme4)
 library(lattice)
 library(PMCMR)
+library(DescTools)
 ```
 
 # Análise do banco de dados
@@ -24,7 +25,7 @@ Com a diversidade de artropodes e habitats eu hipotetizo que deve existir uma di
 #dados <- read.csv("../tese.csv", header = TRUE, sep = ";", dec = ".")# precisa alterar para abrir local
 #dados <- read.csv("../tese.csv", header = TRUE, sep = ";", dec = ".")
 #dados <- read.csv("../tese01.csv", header = TRUE, sep = ";", dec = ".")
-dados <- read.csv("../Tese/tese05.csv", header = TRUE, sep = ";", dec = ".")
+#dados <- read.csv("../Tese/tese05.csv", header = TRUE, sep = ";", dec = ".")
 dados <- read.csv("../tese05.csv", header = TRUE, sep = ";", dec = ".")
 levels(dados$localidade) <- c("Amazonia", "Caatinga", "Cerrado", "Mata Atlântica de Altitude", "Mata Atlântica")
 levels(dados$temp.conf) <- c("Não", "Sim")
@@ -77,7 +78,7 @@ summary(fit)                                    #show the summary table
 print(model.tables(fit,"means"),digits=3)
 shapiro.test(dados$tcmax)#Se ele for maior do que 5%, então podemos afirmar com 95% de confiança que a hipótese nula não foi rejeitada e que a variável possui distribuição normal. 
 hist(dados$tcmax)
-View(dados)
+#View(dados)
 
 ##testando pressupostos para anova - normalidade
 shapiro.test(dados$tcmax[which(dados$localidade == 'Cerrado')])
@@ -105,7 +106,6 @@ posthoc.kruskal.nemenyi.test(x=dados$tcmax, g=dados$localidade, dist ="Chisq")# 
 
 
 ##Outro post.hoc.test usando a funcao FDR(false discovery rate)
-require(DescTools)
 DunnTest(x = dados$tcmax,
          g = dados$localidade,
          method="fdr")    # Can adjust p-values; 
@@ -309,6 +309,9 @@ ggplot(residuos3.sem.duvidosos, aes(x = fitados, y = rsut)) + geom_point(size=1)
   ggtitle('Gráfico de Resíduos') +  xlab('Valores Ajustados') + ylab('Resíduos Studentizados') + ylim(c(-5,5)) +
   geom_rect(aes(ymin=-2, ymax=2, xmin=-Inf, xmax=Inf), alpha=0.002) + geom_abline(slope=0, intercept=0)
 ```
+
+#### Modelo de efeito misto
+
 
 
 ### Modelo com variáveis geográficas e locais
