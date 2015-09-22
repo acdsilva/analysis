@@ -26,14 +26,19 @@ Com a diversidade de artropodes e habitats eu hipotetizo que deve existir uma di
 #dados <- read.csv("../tese.csv", header = TRUE, sep = ";", dec = ".")
 #dados <- read.csv("../tese01.csv", header = TRUE, sep = ";", dec = ".")
 #dados <- read.csv("../Tese/tese05.csv", header = TRUE, sep = ";", dec = ".")
+<<<<<<< HEAD
 dados <- read.csv("../tese05.csv", header = TRUE, sep = ";", dec = ".")
+=======
+#dados <- read.csv("../Tese/tese05.csv", header = TRUE, sep = ";", dec = ".")
+dados <- read.csv("~/R/analysis_beta/tese05.csv", header = TRUE, sep = ";", dec = ".")
+>>>>>>> 35708ab50ad684334947836aad211d4f29b02535
 levels(dados$localidade) <- c("Amazonia", "Caatinga", "Cerrado", "Mata Atlântica de Altitude", "Mata Atlântica")
 levels(dados$temp.conf) <- c("Não", "Sim")
 
 dados[,'hora.2'] <- as.integer(substring(dados$hora, 1,2))
 dados[,'mes.2'] <- substring(dados$mes, 1,3)
 
-estacoes <- read.csv("../temp_WS.csv", header = TRUE, sep = ";", dec = ".")[, -c(12, 13, 14)]
+estacoes <- read.csv("~/R/analysis_beta/temp_WS.csv", header = TRUE, sep = ";", dec = ".")[, -c(12, 13, 14)]
 estacoes[, 'Bioma'] <- 'Não Definido'
 estacoes[which(estacoes$WSlocality == 'Manaus'), 'Bioma'] <- 'Amazônia'
 estacoes[which(estacoes$WSlocality == 'CamposdoJordao'), 'Bioma'] <- 'Mata Atântica de Altitude'
@@ -43,7 +48,7 @@ estacoes[which(estacoes$WSlocality == 'Florania'), 'Bioma'] <- 'Caatinga'
 
 estacoes.Data <- aggregate(temperature ~ Bioma, data = estacoes, mean)
 estacoes.Data <- data.frame(Bioma = estacoes.Data$Bioma,
-                            Média = estacoes.Data$temperature,
+                            Media = estacoes.Data$temperature,
                             Max = aggregate(temperature ~ Bioma, data = estacoes, max)[,2],
                             Min = aggregate(temperature ~ Bioma, data = estacoes, min)[,2])
 estacoes.Data[, 'Amplitude'] <- estacoes.Data$Max - estacoes.Data$Min
@@ -70,9 +75,9 @@ ggplot(dados, aes(x = tcmax)) + geom_histogram(binwidth = 1.5, aes(fill = classe
 ```
 A distribuição de temperaturas críticas máximas não é igual em todos os biomas.
 referencia(http://rcompanion.org/rcompanion/d_06.html)
-
+referencia(https://sites.google.com/site/manabusakamoto/home/r-tutorials/r-tutorial-1)
 ```{r anova.fit, cache=TRUE, echo=FALSE, message=TRUE,warning=TRUE}
-#fit <- aov(localidade ~ tcmax, data=dados)
+##fit <- aov(localidade ~ tcmax, data=dados)
 fit <- aov(bioma ~ tcmax, data=dados)
 summary(fit)                                    #show the summary table
 print(model.tables(fit,"means"),digits=3)
@@ -101,6 +106,10 @@ require(PMCMR)
 # Kruskal Wallis Test One Way Anova by Ranks
 kruskal.test(tcmax~localidade, data = dados) # where y1(tcmax) is numeric and A(localidade) is a factor
 
+#kruskal.test(dados$tcmax,dados$localidade == "Cerrado")
+#friedman.test(dados$tcmax,dados$bioma,dados$classe)
+
+
 ##post hoc test for Kruskall Wallis test
 posthoc.kruskal.nemenyi.test(x=dados$tcmax, g=dados$localidade, dist ="Chisq")# x= dados de interesse, g= fator de separacao
 
@@ -110,6 +119,7 @@ DunnTest(x = dados$tcmax,
          g = dados$localidade,
          method="fdr")    # Can adjust p-values; 
                            # See ?p.adjust for options
+
 
 ```
 

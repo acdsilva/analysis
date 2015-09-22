@@ -1,7 +1,7 @@
 ########## Para carregar a base  ##########
-abu <- read.delim(file = 'abu.txt',sep = "", dec = ".", header = TRUE)
+abu <- read.delim("~/R/analysis_beta/abu.txt",sep = "", dec = ".", header = TRUE)
 # Criando data frame com as medidas de abundância
-medidas.abundancia <- data.frame(prop.Pseudoscorpionida = 
+medidas.abundancia <- data.frame(prop.Pseudoscorpionida =
                                    abu[,'Pseudoscorpionida']/sum(abu[,'Pseudoscorpionida']),
                                  prop.X0 = abu[,'X0']/sum(abu[,'X0']),
                                  prop.Acari = abu$Acari/sum(abu$Acari),
@@ -63,12 +63,12 @@ alpha <- fisher.alpha(abu)
 ##Plot all index
 pairs(cbind(H, simp, invsimp, unbias.simp, alpha), pch="+", col="blue" )
 ## Species richness (S) adaptated vegan eg.
-S <- specnumber(abu2) ## rowSums(abu > 0) 
+S <- specnumber(abu2) ## rowSums(abu > 0)
 # To calculate Pielou's evenness (J)
 J <- H/log(S)
 
 
-#Jaccad index 
+#Jaccad index
 #create the graph for input in function
 
 abu.env <- read.delim(file = 'abu_env_biomas.txt',sep = "", dec = ".", header = TRUE)
@@ -87,7 +87,7 @@ library("lattice")
 ##load data
 data.frame(abu)
 myabu<-abu
-## dealing with dissimilarity 
+## dealing with dissimilarity
 abu.dis <- vegdist(abu)
 abu.mds0 <- isoMDS(abu.dis)
 ## Check the function
@@ -132,23 +132,23 @@ plot(abu.mds, type = "t")
 plot(abu$Acari)
 
 #####Fits an Environmental Vector or Factor onto an Ordination#####
-###function "envfit",  
+###function "envfit",
 #The function fits environmental vectors or factors onto an ordination.
-#The projections of points onto vectors have maximum correlation 
+#The projections of points onto vectors have maximum correlation
 #with corresponding environmental variables, and the factors show the averages of factor levels.
 # vai encaixa/ajustar vetores ambientais ou fatores para uma ordenação
 # resultado com:
 # "r" = Goodness of fit (Testes de adequação (aderência))
 # e "pvals" = valores de P para cada variável.
 
-ef <- envfit(abu.mds, myabu.env, permu = 999)#error in original myabu.env! 
+ef <- envfit(abu.mds, myabu.env, permu = 999)#error in original myabu.env!
 ef
 
 #try fix error use data of myabu2.env  here the same number in x
 ef <- envfit(abu.mds, myabu2.env, permu = 999)
 ef
 
-# gráfico com os dados ambientais 
+# gráfico com os dados ambientais
 windows(width=5,height=5)
 plot(abu.mds,type = "t", display = "sites")
 plot(ef, p.max = 0.05) # somente os mais significativas
